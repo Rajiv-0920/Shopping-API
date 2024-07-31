@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Shopping API</title>
+  <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.css" />
+  <link rel="stylesheet" href="../node_modules/bootstrap-icons/font/bootstrap-icons.css" />
+  <script>
+    function getCategories() {
+      fetch("https://fakestoreapi.com/products/categories")
+        //response can be named as anything
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          data.unshift("all");
+          for (var item of data) {
+            var option = document.createElement("option");
+            option.text = item.toUpperCase();
+            option.value = item;
+            document.getElementById("lstCategories").appendChild(option);
+          }
+        });
+    }
+    function getProducts(url) {
+      document.getElementById("productsContainer").innerHTML = "";
+      fetch(url)
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          for (var item of data) {
+            var div = document.createElement("div");
+            div.className = "card m-2 p-2";
+            div.style.width = "200px";
+            div.innerHTML = ` 
+              <img src= ${item.image} class= "card-img-top" style= "height: 200px">
+              <div class="card-header " style= "height: 175px">
+                <p>${item.title} </p>
+                </div>
+                <div class="card-body">
+                  <p> $${item.price} </p>
+                  <p>Rating: ${item.rating.rate} </p>
+                  <p>Price: ${item.rating.count} </p>
+
+                  </div>
+                  <div class="card-footer">
+                    <button class="btn btn-danger w-100" onclick="addToCartClick(${item.id})">
+                      <span class="bi bi-cart4"> </span>Add to Cart  </button>
+                    </div>
+              `;
+            document.getElementById("productsContainer").appendChild(div);
+          }
+        });
+    }
+    function bodyload() {
+      getCategories();
+      getProducts("https://fakestoreapi.com/products");
+      getCartItemsCount();
+    }
+    function categoryChange() {
+      var categoryName = document.getElementById("lstCategories").value;
+      if (categoryName == "all") {
+        getProducts("https://fakestoreapi.com/products");
+      } else {
+        getProducts(
+          `https://fakestoreapi.com/products/category/${categoryName}`
+        );
+      }
+    }
+    var cartItems = [];
+    var count = 0;
+    function getCartItemsCount() {
+      count = cartItems.length;
+      document.getElementById("countCart").innerHTML = count;
+    }
+    function addToCartClick(id) {
+      fetch(`https://fakestoreapi.com/products/${id}`)
+        .then(function (response) {
+          return response.json();
+        })
+        .then(function (data) {
+          cartItems.push(data);
+          alert("Item Successfully Added to Cart!!");
+          getCartItemsCount();
+        });
+    }
+    function showCartClick() {
+      var totalValue = 0;
+      document.querySelector("tbody").innerHTML = "";
+      for (var item of cartItems) {
+        var tr = document.createElement("tr");
+        var tdTitle = document.createElement("td");
+        var tdPrice = document.createElement("td");
+        var tdPreview = document.createElement("td");
+
+        tdTitle.innerHTML = item.title;
+        tdPrice.innerHTML = `$${item.price.toFixed(2)}`;
+
+        var img = document.createElement("img");
+        img.src = item.image;
+        img.width = "100";
+        img.height = "100";
+
+        tdPreview.appendChild(img);
+
+        tr.appendChild(tdTitle);
+        tr.appendChild(tdPrice);
+        tr.appendChild(tdPreview);
+
+        document.querySelector("tbody").appendChild(tr);
+        totalValue += item.price;
+      }
+      var tfoot = document.querySelector("tfoot");
+      tfoot.innerHTML = ""; // Clear previous content
+      var totalRow = document.createElement("tr");
+      var tdTotal = document.createElement("td");
+      tdTotal.colSpan = "3"; // Make this cell span across all columns
+      tdTotal.innerHTML = `<strong>Total: $${totalValue.toFixed(2)}</strong>`;
+      totalRow.appendChild(tdTotal);
+      tfoot.appendChild(totalRow);
+    }
+  </script>
+</head>
+
+<body class="container-fluid" onload="bodyload()">
+  <h1 class="bg-danger text-center text-white p-2">
+    <span class="bi bi-cart4"></span>Shopping API
+  </h1>
+  <div class="row mt-3">
+    <div class="col-2">
+      <h3>Select a Category</h3>
+      <select class="form-select" id="lstCategories" onchange="categoryChange();"></select>
+    </div>
+    <div class="col-8">
+      <div class="d-flex flex-wrap overflow-auto" id="productsContainer" style="height: 100%"></div>
+    </div>
+    <div class="col-2">
+      <button onclick="showCartClick()" class="btn btn-warning" data-bs-target="#cart" data-bs-toggle="modal">
+        [<span id="countCart"></span>] <span class="bi bi-cart3"></span> Your
+        Cart Items
+      </button>
+      <div class="modal fade" id="cart">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3>Your Cart Items</h3>
+              <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Price</th>
+                    <th>Preview</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+                <tfoot>
+                  <tr></tr>
+                </tfoot>
+              </table>
+            </div>
+            <div class="modal-footer">
+              <button data-bs-dismiss="modal" class="btn btn-success">
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="../node_modules/jquery/dist/jquery.js"></script>
+  <script src="../node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
+</body>
+
+</html>
